@@ -1,3 +1,5 @@
+pub mod compressor;
+
 #[macro_use]
 extern crate rocket;
 
