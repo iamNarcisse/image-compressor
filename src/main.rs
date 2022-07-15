@@ -7,6 +7,8 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status::Custom;
 use rocket::Data;
 
+use rocket_raw_response::RawResponse;
+
 use rocket_multipart_form_data::{
     mime, multer, MultipartFormData, MultipartFormDataError, MultipartFormDataField,
     MultipartFormDataOptions,
@@ -22,7 +24,10 @@ fn index() -> &'static str {
 }
 
 #[post("/", data = "<data>")]
-async fn compress(content_type: &ContentType, data: Data<'_>) -> Result<(), Custom<String>> {
+async fn compress(
+    content_type: &ContentType,
+    data: Data<'_>,
+) -> Result<RawResponse, Custom<String>> {
     let options = MultipartFormDataOptions {
         max_data_bytes: 33 * 1024 * 1024,
         allowed_fields: vec![MultipartFormDataField::raw("image")
@@ -69,17 +74,13 @@ async fn compress(content_type: &ContentType, data: Data<'_>) -> Result<(), Cust
         Some(mut image) => {
             let compressed = compressor::Compressor::new();
             let raw = image.remove(0);
-            // let content_type = raw.content_type;
-            // let file_name = raw.file_name.unwrap_or_else(|| "Image".to_string());
+            let content_type = raw.content_type;
+            let file_name = raw.file_name.unwrap_or_else(|| "Image".to_string());
             let data = raw.raw;
             let result = compressed.compress_from_memory(&data);
 
             match result {
-                Ok(data) => {
-                    println!("{:?}", data);
-                    // let response = RawResponse::from_file(path, Some(file_name), content_type);
-                    Ok(())
-                }
+                Ok(data) => Ok(RawResponse::from_vec(data, Some(file_name), content_type)),
                 Err(e) => Err(Custom(Status::BadRequest, e.to_string())),
             }
         }
