@@ -1,4 +1,4 @@
-use oxipng::optimize;
+use oxipng::{optimize, optimize_from_memory};
 use oxipng::{InFile, IndexSet, OutFile, PngError};
 use std::path::Path;
 use std::path::PathBuf;
@@ -23,6 +23,35 @@ impl Compressor {
             Ok(data) => Ok(data),
             Err(e) => Err(e),
         }
+    }
+
+    pub fn compress_from_memory(&self, input: &[u8]) -> PngResult<Vec<u8>> {
+        let (opts) = self.get_options();
+        let result = optimize_from_memory(&input, &opts);
+
+        match result {
+            Ok(result) => Ok(result),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn get_options(&self) -> oxipng::Options {
+        let mut options = oxipng::Options {
+            force: true,
+            ..Default::default()
+        };
+
+        let mut filter = IndexSet::new();
+        filter.insert(0);
+        options.filter = filter;
+        return options;
+    }
+
+    fn get_opts(&self, input: &Path) -> (PathBuf, oxipng::Options) {
+        let mut output = PathBuf::from(input);
+        output.set_extension("out.png");
+        let opts = self.get_options();
+        (output, opts)
     }
 }
 
