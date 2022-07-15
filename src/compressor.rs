@@ -1,9 +1,8 @@
+extern crate oxipng;
 use oxipng::{optimize, optimize_from_memory};
 use oxipng::{InFile, IndexSet, OutFile, PngError};
 use std::path::Path;
 use std::path::PathBuf;
-
-extern crate oxipng;
 
 pub type PngResult<T> = Result<T, PngError>;
 
@@ -14,6 +13,7 @@ impl Compressor {
         Compressor {}
     }
 
+    #[allow(dead_code)]
     pub fn compress(&self, input: &str) -> PngResult<()> {
         let input = PathBuf::from(input);
         let (output, opts) = self.get_opts_with_output(&input);
